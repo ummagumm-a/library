@@ -13,29 +13,32 @@ struct st_book {
 typedef struct st_book book;
 
 struct st_customer {
-    char name[50];
+    char *name;
     int age;
-    float customer_rate;
+    float rate;
     struct st_customer *next;
     struct st_customer *previous;
 };
 
 book *g_first_book;
 book *g_last_book;
-struct st_customer g_first_customer;
-struct st_customer g_last_customer;
+struct st_customer *g_first_customer;
+struct st_customer *g_last_customer;
 
 void menu();
-int read_input();
 void open_section();
-void error_message();
 void enter_to_return();
-void clear_terminal();
 char *get_string(int size);
 void arrow();
 void clear_from_garbage();
 void display_book(book displayed_book);
+void display_customer(struct st_customer displayed_customer);
+void info_about_book(book *book_to_fill_in);
+void info_about_customer(struct st_customer *customer_to_fill_in);
+book *create_book();
+struct st_customer *create_customer();
 book *find_book();
+struct st_customer *find_customer(char *desired_name);
 
 void show_books();
 void add_book();
@@ -45,7 +48,6 @@ void show_customers();
 void add_customer();
 void update_customer();
 void remove_customer();
-void quit();
 
 int main() {
     g_first_book = malloc(sizeof(book));
@@ -77,7 +79,7 @@ void arrow() {
 void open_section() {
     for (;;) {
         arrow();
-        int input;
+        auto int input;
         scanf("%d", &input);
         clear_from_garbage();
 
@@ -110,18 +112,12 @@ void open_section() {
                 remove_customer();
                 break;
             default:
-                error_message();
+                arrow();
+                printf("Please, enter a valid number\n");
                 continue;
         }
         enter_to_return();
     }
-}
-
-void error_message() {
-//    clear_terminal();
-//    menu();
-    arrow();
-    printf("Please, enter a valid number\n");
 }
 
 void enter_to_return() {
@@ -139,9 +135,18 @@ void clear_from_garbage() {
     while ((c = (char) getc(stdin)) != EOF && c != '\n');
 }
 
+char *get_string(int size) {
+    char *string = malloc(size * sizeof(char));
+    fgets(string, size, stdin);
+    char *pos;
+    if ((pos=strchr(string, '\n')) != NULL) *pos = '\0';
+
+    return string;
+}
+
 void show_books() {
     if (g_first_book->next == NULL) {
-        printf("There are no books\n");
+        printf("There is nothing to show\n");
         return;
     }
     book book_from_the_list = *g_first_book->next;
@@ -158,13 +163,12 @@ void show_books() {
 
 void display_book(book displayed_book) {
     printf("--------------------------------\n");
-    printf("Own: %p\n", &displayed_book);
     printf("Title: %s\n", displayed_book.title);
     printf("Author: %s\n", displayed_book.author);
     printf("Year of publishing: %d\n", displayed_book.year);
     printf("Rate: %.2f\n", displayed_book.book_rate);
-    printf("Next: %p\n", displayed_book.next);
-    printf("Previous: %p\n", displayed_book.previous);
+//    printf("Next: %p\n", displayed_book.next);
+//    printf("Previous: %p\n", displayed_book.previous);
 
     printf("--------------------------------\n");
 }
@@ -179,50 +183,53 @@ book *create_book() {
     return temp;
 }
 
-void add_book() {
-    book *new_book = create_book();
-
+void info_about_book(book *book_to_fill_in) {
     printf("Enter a name of the book\n");
     arrow();
-    new_book->title = get_string(60);
+    book_to_fill_in->title = get_string(60);
 //    clear_terminal();
 
     printf("Enter a name of the author\n");
     arrow();
-    new_book->author = get_string(50);
+    book_to_fill_in->author = get_string(50);
 //    clear_terminal();
 
     printf("Enter a year of publishing\n");
     arrow();
-    scanf("%d", &new_book->year);
+    scanf("%d", &book_to_fill_in->year);
     clear_from_garbage();
 //    clear_terminal();
 
     printf("Enter a book rate\n");
     arrow();
-    scanf("%f", &new_book->book_rate);
+    scanf("%f", &book_to_fill_in->book_rate);
     clear_from_garbage();
 //    clear_terminal();
+}
+
+void add_book() {
+    book *new_book = create_book();
+
+    info_about_book(new_book);
 
     g_last_book = new_book;
     if (g_first_book->next == NULL) {
         g_first_book = new_book;
     }
 
-    printf("Book has been created successfully!\n");
-}
-
-char *get_string(int size) {
-    char *string = malloc(size * sizeof(char));
-    fgets(string, size, stdin);
-    char *pos;
-    if ((pos=strchr(string, '\n')) != NULL) *pos = '\0';
-
-    return string;
+    printf("Book has been added successfully!\n");
 }
 
 void update_book() {
+    printf("Enter the name of the book that you want to update\n");
+    arrow();
+    char *desired_title = get_string(60);
+    printf("Provide new information about the book\n");
+    book *found_book = find_book(desired_title);
 
+    info_about_book(found_book);
+
+    printf("Book has been updated successfully!\n");
 }
 
 void remove_book() {
@@ -230,7 +237,6 @@ void remove_book() {
     arrow();
     char *desired_title = get_string(60);
     book *found_book = find_book(desired_title);
-
 
     if (found_book != NULL) {
         found_book->previous->next = found_book->next;
@@ -265,56 +271,115 @@ book *find_book(char *desired_title) {
 }
 
 void show_customers() {
+    if (g_first_customer->next == NULL) {
+        printf("There is nothing to show\n");
+        return;
+    }
+    struct st_customer customer_from_the_list = *g_first_customer->next;
 
+    for (;;) {
+        display_customer(customer_from_the_list);
+        if (customer_from_the_list.next != NULL) {
+            customer_from_the_list = *customer_from_the_list.next;
+        } else {
+            break;
+        }
+    }
 }
 
-//struct st_customer *create_customer() {
-//    struct st_customer *temp = malloc(sizeof(struct st_customer));
-//    temp->next = NULL;
-//
-//
-//}
+void display_customer(struct st_customer displayed_customer) {
+    printf("--------------------------------\n");
+    printf("Title: %s\n", displayed_customer.name);
+    printf("Age: %d\n", displayed_customer.age);
+    printf("Rate: %f\n", displayed_customer.rate);
+
+    printf("--------------------------------\n");
+}
+
+struct st_customer *create_customer() {
+    struct st_customer *temp = malloc(sizeof(struct st_customer));
+
+    g_last_customer->next = temp;
+    temp->previous = g_last_customer;
+    g_last_customer = temp;
+
+    return temp;
+}
+
+void info_about_customer(struct st_customer *customer_to_fill_in) {
+    printf("Enter a name of the customer\n");
+    arrow();
+    customer_to_fill_in->name = get_string(50);
+
+    printf("Enter an age of the customer\n");
+    arrow();
+    scanf("%d", &customer_to_fill_in->age);
+    clear_from_garbage();
+
+    printf("Enter a rate of the customer\n");
+    arrow();
+    scanf("%f", &customer_to_fill_in->rate);
+    clear_from_garbage();
+}
 
 void add_customer() {
-//    book *new_book = create_book();
-//
-//    if (g_first_book.next == NULL) {
-//        g_first_book = *new_book;
-//    }
-//
-//    printf("Enter a name of the book: ");
-//    scanf("%s", &new_book->title[60]);
-//    clear_terminal();
-//
-//    printf("Enter a name of the author: ");
-//    scanf("%s", &new_book->author[50]);
-//    clear_terminal();
-//
-//    printf("Enter a year of publishing: ");
-//    scanf("%d", &new_book->year);
-//    clear_terminal();
-//
-//    printf("Enter a book rate: ");
-//    scanf("%f", &new_book->book_rate);
-//    clear_terminal();
-//
-//    new_book->next = NULL;
-//    new_book->previous = &g_last_book;
-//    g_last_book.next = new_book;
-//    g_last_book = *new_book;
-//
-//    printf("Book has been created successfully!");
-//    enter_to_return();
+    struct st_customer *new_customer = create_customer();
+
+    info_about_customer(new_customer);
+
+    g_last_customer = new_customer;
+    if (g_first_customer->next == NULL) {
+        g_first_customer = new_customer;
+    }
+
+    printf("Customer has been added successfully!\n");
 }
 
 void update_customer() {
+    printf("Enter the name of the customer that you want to update\n");
+    arrow();
+    char *desired_name = get_string(50);
+    struct st_customer *found_customer = find_customer(desired_name);
 
+    printf("Provide new information about the customer\n");
+    info_about_customer(found_customer);
+
+    printf("Customer has been updated successfully!\n");
 }
 
 void remove_customer() {
+    printf("Enter the name of the customer that you want to remove\n");
+    arrow();
+    char *desired_name = get_string(50);
+    struct st_customer *found_customer = find_customer(desired_name);
 
+    if (found_customer != NULL) {
+        found_customer->previous->next = found_customer->next;
+
+        if (found_customer->next != NULL) {
+            found_customer->next->previous = found_customer->previous;
+            found_customer->next = NULL;
+        }
+        if (found_customer == g_last_customer) {
+            g_last_customer = found_customer->previous;
+        }
+        found_customer->previous = NULL;
+        free(found_customer);
+    } else {
+        printf("There is no such customer in my database\n");
+    }
 }
 
-void clear_terminal() {
-    system("@cls||clear");
+struct st_customer *find_customer(char *desired_name) {
+    struct st_customer *customer_from_the_list = g_first_customer->next;
+
+    while (customer_from_the_list != NULL) {
+        if (*customer_from_the_list->name == *desired_name) {
+            return customer_from_the_list;
+        } else {
+            customer_from_the_list = customer_from_the_list->next;
+        }
+    }
+
+    return NULL;
 }
