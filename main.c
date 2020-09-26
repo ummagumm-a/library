@@ -35,6 +35,7 @@ char *get_string(int size);
 void arrow();
 void clear_from_garbage();
 void display_book(book displayed_book);
+book *find_book();
 
 void show_books();
 void add_book();
@@ -139,7 +140,12 @@ void clear_from_garbage() {
 }
 
 void show_books() {
+    if (g_first_book->next == NULL) {
+        printf("There are no books\n");
+        return;
+    }
     book book_from_the_list = *g_first_book->next;
+
     for (;;) {
         display_book(book_from_the_list);
         if (book_from_the_list.next != NULL) {
@@ -152,12 +158,14 @@ void show_books() {
 
 void display_book(book displayed_book) {
     printf("--------------------------------\n");
+    printf("Own: %p\n", &displayed_book);
     printf("Title: %s\n", displayed_book.title);
     printf("Author: %s\n", displayed_book.author);
     printf("Year of publishing: %d\n", displayed_book.year);
     printf("Rate: %.2f\n", displayed_book.book_rate);
     printf("Next: %p\n", displayed_book.next);
     printf("Previous: %p\n", displayed_book.previous);
+
     printf("--------------------------------\n");
 }
 
@@ -166,6 +174,7 @@ book *create_book() {
 
     g_last_book->next = temp;
     temp->previous = g_last_book;
+    g_last_book = temp;
 
     return temp;
 }
@@ -217,7 +226,42 @@ void update_book() {
 }
 
 void remove_book() {
+    printf("Enter the name of the book that you want to remove\n");
+    arrow();
+    char *desired_title = get_string(60);
+    book *found_book = find_book(desired_title);
 
+
+    if (found_book != NULL) {
+        found_book->previous->next = found_book->next;
+
+        if (found_book->next != NULL) {
+            found_book->next->previous = found_book->previous;
+            found_book->next = NULL;
+        }
+        if (found_book == g_last_book) {
+            g_last_book = found_book->previous;
+        }
+        found_book->previous = NULL;
+        free(found_book);
+    } else {
+        printf("There is no such book in my library\n");
+    }
+
+}
+
+book *find_book(char *desired_title) {
+    book *book_from_the_list = g_first_book->next;
+
+    while (book_from_the_list != NULL) {
+        if (*book_from_the_list->title == *desired_title) {
+            return book_from_the_list;
+        } else {
+            book_from_the_list = book_from_the_list->next;
+        }
+    }
+
+    return NULL;
 }
 
 void show_customers() {
