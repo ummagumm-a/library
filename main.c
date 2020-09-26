@@ -1,3 +1,6 @@
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,6 +55,8 @@ void remove_customer();
 int main() {
     g_first_book = malloc(sizeof(book));
     g_last_book = g_first_book;
+    g_first_customer = malloc(sizeof(struct st_customer));
+    g_last_customer = g_first_customer;
     printf("Welcome to the Library!\n");
     menu();
     open_section();
@@ -84,7 +89,6 @@ void open_section() {
         clear_from_garbage();
 
         if (input == 9) break;
-//        clear_terminal();
 
         switch (input) {
             case 1:
