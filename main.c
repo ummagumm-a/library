@@ -47,6 +47,8 @@ void remove_customer();
 void quit();
 
 int main() {
+    g_first_book = malloc(sizeof(book));
+    g_last_book = g_first_book;
     printf("Welcome to the Library!\n");
     menu();
     open_section();
@@ -137,14 +139,15 @@ void clear_from_garbage() {
 }
 
 void show_books() {
-    book book_from_the_list = *g_first_book;
-    do {
+    book book_from_the_list = *g_first_book->next;
+    for (;;) {
         display_book(book_from_the_list);
         if (book_from_the_list.next != NULL) {
-            book_from_the_list = book_from_the_list.next;
+            book_from_the_list = *book_from_the_list.next;
+        } else {
+            break;
         }
-
-    } while (book_from_the_list.next != NULL);
+    }
 }
 
 void display_book(book displayed_book) {
@@ -160,10 +163,8 @@ void display_book(book displayed_book) {
 
 book *create_book() {
     book *temp = malloc(sizeof(book));
-    void *p = &temp;
 
-    display_book(*g_last_book);
-    g_last_book->next = p;
+    g_last_book->next = temp;
     temp->previous = g_last_book;
 
     return temp;
@@ -193,7 +194,7 @@ void add_book() {
     scanf("%f", &new_book->book_rate);
     clear_from_garbage();
 //    clear_terminal();
-//
+
     g_last_book = new_book;
     if (g_first_book->next == NULL) {
         g_first_book = new_book;
