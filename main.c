@@ -301,7 +301,7 @@ book *find_book(char *desired_title) {
 
     // Iterate through each book in the list till the book is found
     while (book_from_the_list != NULL) {
-        if (*book_from_the_list->title == *desired_title) {
+        if (strcmp(book_from_the_list->title, desired_title) == 0) {
             return book_from_the_list;
         } else {
             book_from_the_list = book_from_the_list->next;
@@ -450,7 +450,7 @@ struct st_customer *find_customer(char *desired_name) {
 
     // Iterate through each customer in the list till the customer is found
     while (customer_from_the_list != NULL) {
-        if (*customer_from_the_list->name == *desired_name) {
+        if (strcmp(customer_from_the_list->name, desired_name) == 0) {
             return customer_from_the_list;
         } else {
             customer_from_the_list = customer_from_the_list->next;
